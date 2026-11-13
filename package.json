@@ -3,7 +3,7 @@
     "schemaVersion": 1,
     "kind": "rast-package",
     "id": "calculator",
-    "type": "runtime",
+    "type": "app",
     "name": "Calculator",
     "description": "A tiny dependency-free integer calculator (arithmetic with parentheses).",
     "homepage": "https://github.com/Enricko/rast-calculator",
@@ -16,16 +16,32 @@
     "minRastVersion": "0.5.0",
     "runtime": {
       "executables": [
-        { "name": "calculator", "path": "bin/calculator" }
+        {
+          "name": "calculator",
+          "path": "bin/calculator"
+        }
       ],
       "checks": [
-        { "executable": "calculator", "args": ["--version"], "expect": "Calculator {version}" },
-        { "executable": "calculator", "args": ["2 + 3 * (4 - 1)"], "expect": "11" }
+        {
+          "executable": "calculator",
+          "args": [
+            "--version"
+          ],
+          "expect": "Calculator {version}"
+        },
+        {
+          "executable": "calculator",
+          "args": [
+            "2 + 3 * (4 - 1)"
+          ],
+          "expect": "11"
+        }
       ]
-    }
+    },
+    "version": null
   },
   "source": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "url": "https://github.com/Enricko/rast-calculator",
     "sha256": "f0e669f9710970be0b1503c445b9ac565ed223690e45b293931d47b1ad578127"
   },

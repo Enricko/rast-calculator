@@ -25,5 +25,5 @@ rustc --edition 2021 -O src/main.rs -o /tmp/calculator
 bash scripts/build.sh linux-x86_64 dist
 ```
 
-Publishing: push a tag `v1.0.0-1`; the release workflow builds both targets,
+Publishing: push a tag like `v1.0.1-1`; the release workflow builds both targets,
 runs the Package Center checks and publishes the manifest and archives.
