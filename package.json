@@ -37,12 +37,16 @@
           "expect": "11"
         }
       ]
+    },
+    "app": {
+      "kind": "web",
+      "entry": "index.html"
     }
   },
   "source": {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "url": "https://github.com/Enricko/rast-calculator",
-    "sha256": "8494e986c658db9015e4d01699576a21ecd47e801cab9e5751f4e2c26d4b82dd"
+    "sha256": "e9128eee935f032016b773f74edaa3ccc4980989477a9ee1d8136a42f1caef75"
   },
   "targets": {
     "linux-x86_64": "ubuntu-24.04",

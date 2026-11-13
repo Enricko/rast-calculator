@@ -311,6 +311,25 @@
           }
         }
       }
+    },
+    "app": {
+      "type": "object",
+      "description": "Presentation of an app-type package: command runner or web entry.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "command",
+            "web"
+          ]
+        },
+        "entry": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false
     }
   },
   "$defs": {

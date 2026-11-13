@@ -11,7 +11,7 @@ esac
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 VERSION=$(sed -n 's/^[[:space:]]*"version": "\([^"]*\)".*/\1/p' "$HERE/package.json" | head -n 1)
 SOURCE_SHA=$(sed -n 's/^[[:space:]]*"sha256": "\([0-9a-f]*\)".*/\1/p' "$HERE/package.json" | head -n 1)
-ACTUAL_SHA=$(cat "$HERE/src/main.rs" "$HERE/scripts/build.sh" | sha256sum | cut -d' ' -f1)
+ACTUAL_SHA=$(cat "$HERE/src/main.rs" "$HERE/scripts/build.sh" "$HERE/app/index.html" | sha256sum | cut -d' ' -f1)
 [ "$SOURCE_SHA" = "$ACTUAL_SHA" ] || {
   echo "package.json source.sha256 does not match the source inputs ($ACTUAL_SHA); update it" >&2
   exit 1
@@ -21,6 +21,8 @@ PKG="calculator-$VERSION"
 mkdir -p "$WORK/stage/$PKG/bin"
 rustc --edition 2021 -O "$HERE/src/main.rs" -o "$WORK/stage/$PKG/bin/calculator"
 "$WORK/stage/$PKG/bin/calculator" --version
+# The App Center app is the web UI; the CLI stays available in the terminal.
+cp -R "$HERE/app" "$WORK/stage/$PKG/app"
 mkdir -p "$OUT"
 ARCHIVE="$OUT/$PKG-$TARGET.tar.gz"
 tar --sort=name --owner=0 --group=0 --numeric-owner --mtime=@0 -C "$WORK/stage" -cf - "$PKG" | gzip -n -9 > "$ARCHIVE"

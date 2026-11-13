@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    background: #17181c; color: #e9ecf2;
+    font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  }
+  .calculator { width: min(720px, calc(100% - 24px)); padding: 12px 10px; }
+  .display {
+    display: flex; align-items: center; gap: 10px;
+    min-height: 84px; margin-bottom: 16px; padding: 12px 22px;
+    border: 1px solid #363a44; border-radius: 18px; background: #20222a;
+  }
+  .display :is(.icon, svg) { width: 22px; height: 22px; color: #7c8494; flex: 0 0 auto; }
+  .display .value {
+    flex: 1; overflow: hidden; text-align: right; white-space: nowrap;
+    font-size: clamp(28px, 6vw, 40px); font-weight: 500; letter-spacing: .5px;
+  }
+  .display .expression {
+    width: 34%; overflow: hidden; text-align: right; color: #7c8494;
+    font-size: 14px; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .keys {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px;
+  }
+  button {
+    appearance: none; border: 0; cursor: pointer;
+    height: clamp(44px, 7vw, 52px); border-radius: 14px;
+    background: #262a33; color: #e9ecf2;
+    font: 500 clamp(14px, 2.4vw, 17px)/1 Inter, system-ui, sans-serif;
+    transition: background .12s ease, transform .06s ease;
+    user-select: none;
+  }
+  button:hover { background: #303541; }
+  button:active { transform: translateY(1px); background: #3a4050; }
+  button.fn { background: #20222a; color: #c2c8d4; }
+  button.fn:hover { background: #262a33; }
+  button.op { background: #2c3140; color: #cfd6e4; }
+  button.equals { background: #3b82f6; color: #fff; grid-column: span 2; }
+  button.equals:hover { background: #2f6fe0; }
+  button.mode.on { background: #3b82f6; color: #fff; }
+  button.mode.inv-on { box-shadow: inset 0 0 0 1px #3b82f6; color: #8ab4ff; }
+  .inverse-label { font-size: .82em; }
+</style>
+</head>
+<body>
+<main class="calculator" aria-label="Scientific calculator">
+  <section class="display" aria-live="polite">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>
+    </svg>
+    <div class="expression" id="expression"></div>
+    <output class="value" id="value">0</output>
+  </section>
+  <div class="keys" id="keys">
+    <button class="mode on" data-action="deg" id="deg">Deg</button>
+    <button class="mode" data-action="rad" id="rad">Rad</button>
+    <button class="fn" data-action="fact">x!</button>
+    <button class="fn" data-action="(">(</button>
+    <button class="fn" data-action=")">)</button>
+    <button class="fn" data-action="percent">%</button>
+    <button class="fn" data-action="clear">AC</button>
+
+    <button class="fn" data-action="inverse" id="inverse">Inv</button>
+    <button class="fn" data-action="sin" id="sin">sin</button>
+    <button class="fn" data-action="ln">ln</button>
+    <button data-action="7">7</button>
+    <button data-action="8">8</button>
+    <button data-action="9">9</button>
+    <button class="op" data-action="/">÷</button>
+
+    <button class="fn" data-action="pi">π</button>
+    <button class="fn" data-action="cos" id="cos">cos</button>
+    <button class="fn" data-action="log">log</button>
+    <button data-action="4">4</button>
+    <button data-action="5">5</button>
+    <button data-action="6">6</button>
+    <button class="op" data-action="*">×</button>
+
+    <button class="fn" data-action="e">e</button>
+    <button class="fn" data-action="tan" id="tan">tan</button>
+    <button class="fn" data-action="sqrt">√</button>
+    <button data-action="1">1</button>
+    <button data-action="2">2</button>
+    <button data-action="3">3</button>
+    <button class="op" data-action="-">−</button>
+
+    <button class="fn" data-action="ans">Ans</button>
+    <button class="fn" data-action="exp">EXP</button>
+    <button class="fn" data-action="power">xʸ</button>
+    <button data-action="0">0</button>
+    <button data-action=".">.</button>
+    <button class="equals" data-action="equals">=</button>
+    <button class="op" data-action="+">+</button>
+  </div>
+</main>
+<script>
+(() => {
+  const expressionEl = document.getElementById("expression");
+  const valueEl = document.getElementById("value");
+  const degButton = document.getElementById("deg");
+  const radButton = document.getElementById("rad");
+  const inverseButton = document.getElementById("inverse");
+  const sinButton = document.getElementById("sin");
+  const cosButton = document.getElementById("cos");
+  const tanButton = document.getElementById("tan");
+  let expression = "";
+  let ans = 0;
+  let degrees = true;
+  let inverse = false;
+
+  const setMode = () => {
+    degButton.classList.toggle("on", degrees);
+    radButton.classList.toggle("on", !degrees);
+    inverseButton.classList.toggle("inv-on", inverse);
+    const swap = (button, normal, other) => {
+      button.textContent = inverse ? other : normal;
+    };
+    swap(sinButton, "sin", "sin⁻¹");
+    swap(cosButton, "cos", "cos⁻¹");
+    swap(tanButton, "tan", "tan⁻¹");
+  };
+  inverseButton.classList.add("fn");
+
+  class Parser {
+    constructor(text) { this.text = text; this.position = 0; }
+    skip() { while (/\s/.test(this.text[this.position] || "")) this.position++; }
+    peek() { this.skip(); return this.text[this.position] || ""; }
+    eat(ch) { if (this.peek() === ch) { this.position++; return true; } return false; }
+    number() {
+      this.skip();
+      const start = this.position;
+      while (/[0-9.]/.test(this.text[this.position] || "")) this.position++;
+      if (start === this.position) throw new Error("number expected");
+      const value = Number(this.text.slice(start, this.position));
+      if (!Number.isFinite(value)) throw new Error("bad number");
+      return value;
+    }
+    primary() {
+      this.skip();
+      if (this.eat("(")) { const value = this.expr(); if (!this.eat(")")) throw new Error("missing )"); return value; }
+      if (this.eat("-")) return -this.primary();
+      if (this.eat("+")) return this.primary();
+      if (this.text.startsWith("pi", this.position)) { this.position += 2; return Math.PI; }
+      if (this.eat("e")) return Math.E;
+      if (this.text.startsWith("ans", this.position)) { this.position += 3; return ans; }
+      const functions = ["sin", "cos", "tan", "asin", "acos", "atan", "ln", "log", "sqrt"];
+      for (const name of functions) {
+        if (this.text.startsWith(name, this.position)) {
+          this.position += name.length;
+          const value = this.primary();
+          const toRad = degrees ? Math.PI / 180 : 1;
+          const fromRad = degrees ? 180 / Math.PI : 1;
+          switch (name) {
+            case "sin": return Math.sin(value * toRad);
+            case "cos": return Math.cos(value * toRad);
+            case "tan": return Math.tan(value * toRad);
+            case "asin": return Math.asin(value) * fromRad;
+            case "acos": return Math.acos(value) * fromRad;
+            case "atan": return Math.atan(value) * fromRad;
+            case "ln": return Math.log(value);
+            case "log": return Math.log10(value);
+            case "sqrt": return Math.sqrt(value);
+          }
+        }
+      }
+      return this.number();
+    }
+    postfix() {
+      let value = this.primary();
+      while (true) {
+        this.skip();
+        if (this.eat("!")) value = factorial(value);
+        else if (this.eat("%")) value /= 100;
+        else if (this.text.startsWith("^", this.position)) { this.position += 1; value = Math.pow(value, this.postfix()); }
+        else if (this.text.startsWith("E", this.position)) { this.position += 1; value = value * Math.pow(10, this.primary()); }
+        else return value;
+      }
+    }
+    term() {
+      let value = this.postfix();
+      while (true) {
+        if (this.eat("*")) value *= this.postfix();
+        else if (this.eat("/")) value /= this.postfix();
+        else return value;
+      }
+    }
+    expr() {
+      let value = this.term();
+      while (true) {
+        if (this.eat("+")) value += this.term();
+        else if (this.eat("-")) value -= this.term();
+        else return value;
+      }
+    }
+  }
+  const factorial = (value) => {
+    if (value < 0 || !Number.isInteger(value)) return NaN;
+    let out = 1;
+    for (let i = 2; i <= value; i++) out *= i;
+    return out;
+  };
+  const evaluate = () => {
+    const parser = new Parser(expression);
+    const value = parser.expr();
+    if (parser.peek() !== "") throw new Error("unexpected input");
+    return value;
+  };
+  const display = () => {
+    expressionEl.textContent = expression;
+    try {
+      if (!expression) { valueEl.textContent = format(ans); return; }
+      valueEl.textContent = format(evaluate());
+    } catch {
+      valueEl.textContent = expression ? "…" : "0";
+    }
+  };
+  const format = (value) => {
+    if (!Number.isFinite(value)) return "Error";
+    const rounded = Math.round(value * 1e10) / 1e10;
+    return String(rounded);
+  };
+  const append = (text) => { expression += text; display(); };
+  const actions = {
+    clear: () => { expression = ""; display(); },
+    equals: () => {
+      try {
+        const result = evaluate();
+        ans = result;
+        expression = format(result);
+        valueEl.textContent = format(result);
+        expressionEl.textContent = "";
+      } catch {
+        valueEl.textContent = "Error";
+      }
+    },
+    deg: () => { degrees = true; setMode(); },
+    rad: () => { degrees = false; setMode(); },
+    inverse: () => { inverse = !inverse; setMode(); },
+    pi: () => append("pi"),
+    e: () => append("e"),
+    ans: () => append("ans"),
+    sin: () => append(inverse ? "asin(" : "sin("),
+    cos: () => append(inverse ? "acos(" : "cos("),
+    tan: () => append(inverse ? "atan(" : "tan("),
+    ln: () => append("ln("),
+    log: () => append("log("),
+    sqrt: () => append("sqrt("),
+    fact: () => append("!"),
+    percent: () => append("%"),
+    exp: () => append("E"),
+    power: () => append("^"),
+    ".": () => append("."),
+  };
+  document.getElementById("keys").addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    const action = button.dataset.action;
+    if (actions[action]) { actions[action](); return; }
+    if (action === "(" || action === ")" || /^[0-9]$/.test(action) || ["+", "-", "*", "/"].includes(action)) {
+      append(action);
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (/^[0-9.+\-*/()]$/.test(event.key)) { append(event.key); event.preventDefault(); }
+    else if (event.key === "Enter" || event.key === "=") { actions.equals(); event.preventDefault(); }
+    else if (event.key === "Escape") { actions.clear(); event.preventDefault(); }
+    else if (event.key === "Backspace") { expression = expression.slice(0, -1); display(); event.preventDefault(); }
+  });
+  setMode();
+  display();
+})();
+</script>
+</body>
+</html>

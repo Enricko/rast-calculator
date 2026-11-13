@@ -1,7 +1,7 @@
 //! A tiny integer calculator: `calculator "2 + 3 * (4 - 1)"`.
 //! No dependencies; built for RAST's Package Center as a runtime package.
 
-const VERSION: &str = "1.0.1";
+const VERSION: &str = "1.0.2";
 
 struct Parser<'a> {
     bytes: &'a [u8],
